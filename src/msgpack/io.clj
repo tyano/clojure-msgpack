@@ -2,7 +2,8 @@
   (:import java.io.ByteArrayOutputStream
            java.io.DataOutputStream
            java.io.ByteArrayInputStream
-           java.io.DataInputStream))
+           java.io.DataInputStream
+           java.io.InputStream))
 
 (defprotocol Unsignable
   "A number whose bit pattern can be interpreted as an unsigned value
@@ -56,9 +57,16 @@
 (defn next-double [stream] (.readDouble ^java.io.DataInputStream stream))
 (defn next-bytes [n stream]
   (if (zero? n) (byte-array 0)
-      (let [bytes (byte-array n)
-            bytes-read (.read ^java.io.DataInputStream stream bytes)]
-        (assert (= n bytes-read))
-        bytes)))
+    (let [bytes ^bytes (byte-array n)
+          bytes-read
+            (loop [offset 0 total-read-bytes 0]
+              (if (>= total-read-bytes n)
+                total-read-bytes
+                (let [len (.read ^InputStream stream bytes (int offset) (int (- n total-read-bytes)))]
+                  (if (< len 0)
+                    n
+                    (recur (long (+ offset len)) (long (+ total-read-bytes len)))))))]
+      (assert (= n bytes-read) (format "n: %d, bytes-read: %d" n bytes-read))
+      bytes)))
 
 (defn next-string [n stream] (String. ^bytes (next-bytes n stream)))
