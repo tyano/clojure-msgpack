@@ -59,13 +59,13 @@
   (if (zero? n) (byte-array 0)
     (let [bytes ^bytes (byte-array n)
           bytes-read
-            (loop [offset 0 total-read-bytes 0]
-              (if (>= total-read-bytes n)
-                total-read-bytes
-                (let [len (.read ^InputStream stream bytes (int offset) (int (- n total-read-bytes)))]
-                  (if (< len 0)
-                    n
-                    (recur (long (+ offset len)) (long (+ total-read-bytes len)))))))]
+            (loop [offset 0]
+              (if (>= offset n)
+                offset
+                (let [len (.read ^InputStream stream bytes (int offset) (int (- n offset)))]
+                  (if (neg? len)
+                    offset
+                    (recur (long (+ offset len)))))))]
       (assert (= n bytes-read) (format "n: %d, bytes-read: %d" n bytes-read))
       bytes)))
 
