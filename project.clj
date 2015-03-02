@@ -5,3 +5,8 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [reiddraper/simple-check "0.5.3"]])
+
+(cemerick.pomegranate.aether/register-wagon-factory!
+   "scp" #(let [c (resolve 'org.apache.maven.wagon.providers.ssh.external.ScpExternalWagon)]
+                      (clojure.lang.Reflector/invokeConstructor c (into-array []))))
+
